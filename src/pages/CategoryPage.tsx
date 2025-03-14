@@ -1,5 +1,8 @@
 import MainLayout from "../layouts/MainLayout"
 import Title from "../components/Title"
+import CategoryList from "../components/CategoryList"
+import ProductList from "../components/ProductList"
+
 const CategoryPage = () => {
   return (
     <MainLayout>
@@ -10,29 +13,8 @@ const CategoryPage = () => {
             Настройки
           </div>
         </div>
-        <div className="flex gap-1.5 mt-5">
-          <div className="rounded-full border border-black px-2.5 h-6 flex items-center text-sm cursor-pointer">
-            Все товары
-          </div>
-          <div className="rounded-full border border-black px-2.5 text-sm cursor-pointer">
-            Игрушка
-          </div>
-          <div className="rounded-full border border-black px-1 text-sm cursor-pointer">
-            Мартышка
-          </div>
-          <div className="rounded-full border border-black px-1 text-sm cursor-pointer">
-            Мишка
-          </div>
-          <div className="rounded-full border border-black px-1 text-sm cursor-pointer">
-            Подарок
-          </div>
-          <div className="rounded-full border border-black px-1 text-sm cursor-pointer">
-            Подарок коллегам
-          </div>
-          <div className="rounded-full border border-black px-1 text-sm cursor-pointer">
-            День Рождения
-          </div>
-        </div>
+        <CategoryList />
+        <ProductList />
       </div>
     </MainLayout>
   )

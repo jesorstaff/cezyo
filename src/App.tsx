@@ -1,5 +1,5 @@
-import { Routes, Route } from 'react-router'
-import CategoryPage from './pages/CategoryPage'
+import { Routes, Route } from "react-router"
+import CategoryPage from "./pages/CategoryPage"
 
 const App = () => {
   return (
