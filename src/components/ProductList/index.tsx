@@ -1,14 +1,42 @@
-import { useEffect } from "react"
+import { useEffect, useState } from "react"
 import { observer } from "mobx-react-lite"
 import productsStore from "../../stores/ProductsStore"
 import categoryStore from "../../stores/CategoryStore"
 
 const ProductList = observer(() => {
+  const [isFetching, setIsFetching] = useState(false)
+
   useEffect(() => {
     productsStore.fetchProducts(categoryStore.selectedCategoryId)
   }, [categoryStore.selectedCategoryId])
 
-  console.log(productsStore.products)
+  useEffect(() => {
+    const handleScroll = () => {
+      const scrollTop = document.documentElement.scrollTop
+      const scrollHeight = document.documentElement.scrollHeight
+      const clientHeight = document.documentElement.clientHeight
+
+      if (
+        scrollTop + clientHeight >= scrollHeight - 100 &&
+        !productsStore.isLoading &&
+        productsStore.hasMore
+      ) {
+        setIsFetching(true)
+      }
+    }
+
+    window.addEventListener("scroll", handleScroll)
+    return () => window.removeEventListener("scroll", handleScroll)
+  }, [productsStore.isLoading, productsStore.hasMore])
+
+  useEffect(() => {
+    if (!isFetching) return
+
+    productsStore
+      .fetchProducts(categoryStore.selectedCategoryId, true)
+      .finally(() => setIsFetching(false))
+  }, [isFetching])
+
   if (productsStore.isLoading) {
     return <div>Loading...</div>
   }

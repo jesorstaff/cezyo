@@ -3,7 +3,7 @@ import axios from "axios"
 
 class CategoryStore {
   categories: any[] = []
-  selectedCategoryId: number | null = null
+  selectedCategoryId: number[] = []
 
   constructor() {
     makeAutoObservable(this)
@@ -17,7 +17,15 @@ class CategoryStore {
   }
 
   selectCategory(id: number | null) {
-    this.selectedCategoryId = id
+    if (id === null) {
+      this.selectedCategoryId = []
+    } else if (this.selectedCategoryId?.includes(id)) {
+      this.selectedCategoryId = this.selectedCategoryId.filter(
+        (item) => item !== id
+      )
+    } else {
+      this.selectedCategoryId?.push(id)
+    }
   }
 }
 
