@@ -11,7 +11,6 @@ const CategoryList = observer(() => {
   }, [])
 
   const changeCategory = (categoryId: number | null) => {
-    console.log(categoryId)
     categoryStore.selectCategory(categoryId)
     productsStore.fetchProducts(categoryStore.selectedCategoryId)
   }

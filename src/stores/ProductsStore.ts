@@ -1,58 +1,38 @@
 import { makeAutoObservable, runInAction } from "mobx"
 import axios from "axios"
 import { IProduct } from "../interfaces"
+import { fetchProductsApi } from "../api/productsApi"
 
 class ProductsStore {
   products: IProduct[] = []
   productImages: { [key: number]: string[] } = {}
   isLoading: boolean = false
   currentRange: [number, number] = [0, 15]
-  hasMore: boolean = true
+  isLoadingScroll: boolean = false
 
   constructor() {
     makeAutoObservable(this)
   }
 
-  async fetchProducts(
-    categoryId: number[] | null,
-    // range: [number, number] = this.currentRange
-    loadMore: boolean = false
-  ) {
-    if (this.isLoading || !this.hasMore) return
-
+  async fetchProducts(categoryId: number[] | null) {
     this.isLoading = true
 
     const filter =
       categoryId && categoryId.length > 0 ? { category_id: categoryId } : {}
 
-    const range = loadMore ? this.currentRange : [0, 15]
-
     try {
-      const response = await axios.get("https://test2.sionic.ru/api/Products", {
-        params: {
-          range: JSON.stringify(range),
-          filter: JSON.stringify(filter),
-        },
-      })
+      // const response = await axios.get("https://test2.sionic.ru/api/Products", {
+      //   params: {
+      //     range: JSON.stringify(this.currentRange),
+      //     filter: JSON.stringify(filter),
+      //   },
+      // })
+      const response = await fetchProductsApi(this.currentRange, filter)
       runInAction(() => {
-        if (loadMore) {
-          this.products = [...this.products, ...response.data]
-        } else {
-          this.products = response.data
-        }
-
-        this.currentRange = [range[1], range[1] + 15]
-        this.hasMore = response.data.length === 16
+        this.products = response.data
       })
 
-      // await this.fetchProductImages(this.products.map((product) => product.id))
-      const newProductIds = response.data
-        .map((product: IProduct) => product.id)
-        .filter((id: number) => !this.productImages[id])
-
-      if (newProductIds.length > 0) {
-        await this.fetchProductImages(newProductIds)
-      }
+      await this.fetchProductImages(this.products.map((product) => product.id))
     } catch (error) {
       console.error("Ошибка при запросе товаров:", error)
     } finally {
@@ -65,25 +45,75 @@ class ProductsStore {
   async fetchProductImages(productIds: number[]) {
     if (productIds.length === 0) return
 
-    const response = await axios.get(
-      "https://test2.sionic.ru/api/ProductImages",
-      {
-        params: {
-          filter: JSON.stringify({ product_id: productIds }),
-        },
-      }
-    )
-
-    runInAction(() => {
-      response.data.forEach((image: any) => {
-        if (!this.productImages[image.product_id]) {
-          this.productImages[image.product_id] = []
+    try {
+      const response = await axios.get(
+        "https://test2.sionic.ru/api/ProductImages",
+        {
+          params: {
+            filter: JSON.stringify({ product_id: productIds }),
+          },
         }
-        if (!this.productImages[image.product_id].includes(image.image_url)) {
-          this.productImages[image.product_id].push(image.image_url)
+      )
+
+      runInAction(() => {
+        response.data.forEach(
+          (image: { product_id: number; image_url: string }) => {
+            if (!this.productImages[image.product_id]) {
+              this.productImages[image.product_id] = []
+            }
+            if (
+              !this.productImages[image.product_id].includes(image.image_url)
+            ) {
+              this.productImages[image.product_id].push(image.image_url)
+            }
+          }
+        )
+      })
+    } catch (error) {
+      console.error("Ошибка при запросе изображений товаров:", error)
+    }
+  }
+
+  async fetchScrollProducts() {
+    this.isLoadingScroll = true
+
+    // const range = [this.currentRange[1] + 1, this.currentRange[1] + 16] // [16, 30]
+    const range = this.currentRange
+
+    try {
+      const response = await axios.get("https://test2.sionic.ru/api/Products", {
+        params: {
+          range: JSON.stringify(range),
+        },
+      })
+
+      const newProducts = response.data.filter(
+        (item: IProduct) =>
+          !this.products.some((element) => element.id === item.id)
+      )
+
+      runInAction(() => {
+        if (response.data.length === 0) return
+
+        this.products = [...this.products, ...newProducts]
+
+        if (response.data.length > 0) {
+          console.log("this.currentRange", this.currentRange)
+          this.currentRange = [range[1] + 1, range[1] + 16]
         }
       })
-    })
+
+      await this.fetchProductImages(newProducts.map((product) => product.id))
+    } catch (error) {
+      console.error(
+        "Ошибка при запросе подгружаемых товаров во время скролла:",
+        error
+      )
+    } finally {
+      runInAction(() => {
+        this.isLoadingScroll = false
+      })
+    }
   }
 }
 

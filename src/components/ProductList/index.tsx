@@ -4,10 +4,10 @@ import productsStore from "../../stores/ProductsStore"
 import categoryStore from "../../stores/CategoryStore"
 
 const ProductList = observer(() => {
-  const [isFetching, setIsFetching] = useState(false)
+  // const [isFetching, setIsFetching] = useState(false)
 
   useEffect(() => {
-    productsStore.fetchProducts(categoryStore.selectedCategoryId)
+    productsStore.fetchProducts(categoryStore.selectedCategoryId) // TODO: получили товары, по категориям
   }, [categoryStore.selectedCategoryId])
 
   useEffect(() => {
@@ -18,28 +18,22 @@ const ProductList = observer(() => {
 
       if (
         scrollTop + clientHeight >= scrollHeight - 100 &&
-        !productsStore.isLoading &&
-        productsStore.hasMore
+        !productsStore.isLoadingScroll
       ) {
-        setIsFetching(true)
+        console.log("123")
+        productsStore.fetchScrollProducts()
       }
     }
 
     window.addEventListener("scroll", handleScroll)
     return () => window.removeEventListener("scroll", handleScroll)
-  }, [productsStore.isLoading, productsStore.hasMore])
-
-  useEffect(() => {
-    if (!isFetching) return
-
-    productsStore
-      .fetchProducts(categoryStore.selectedCategoryId, true)
-      .finally(() => setIsFetching(false))
-  }, [isFetching])
+  }, [productsStore.isLoadingScroll])
 
   if (productsStore.isLoading) {
     return <div>Loading...</div>
   }
+
+  // console.log("productsStore.products", productsStore.products)
 
   return (
     <div className="grid grid-cols-4 gap-5 gap-y-7.5 mt-5 mb-32.5">
@@ -48,7 +42,7 @@ const ProductList = observer(() => {
           (cat) => cat.id === product.category_id
         )
         return (
-          <div key={product.id} className="">
+          <div key={product.id}>
             <div className="relative">
               {productsStore.productImages[product.id] && (
                 <img
