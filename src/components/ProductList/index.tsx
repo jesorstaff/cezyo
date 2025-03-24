@@ -1,13 +1,16 @@
-import { useEffect, useState } from "react"
+import { useEffect, useContext } from "react"
 import { observer } from "mobx-react-lite"
-import productsStore from "../../stores/ProductsStore"
+// import productsStore from "../../stores/ProductsStore"
 import categoryStore from "../../stores/CategoryStore"
+import { StoreContext } from "../../stores"
 
 const ProductList = observer(() => {
+  const {ProductsStore} = useContext(StoreContext)
   // const [isFetching, setIsFetching] = useState(false)
 
+
   useEffect(() => {
-    productsStore.fetchProducts(categoryStore.selectedCategoryId) // TODO: получили товары, по категориям
+    ProductsStore.fetchProducts(categoryStore.selectedCategoryId) // TODO: получили товары, по категориям
   }, [categoryStore.selectedCategoryId])
 
   useEffect(() => {
@@ -18,18 +21,17 @@ const ProductList = observer(() => {
 
       if (
         scrollTop + clientHeight >= scrollHeight - 100 &&
-        !productsStore.isLoadingScroll
+        !ProductsStore.isLoadingScroll
       ) {
-        console.log("123")
-        productsStore.fetchScrollProducts()
+        ProductsStore.fetchScrollProducts()
       }
     }
 
     window.addEventListener("scroll", handleScroll)
     return () => window.removeEventListener("scroll", handleScroll)
-  }, [productsStore.isLoadingScroll])
+  }, [ProductsStore.isLoadingScroll])
 
-  if (productsStore.isLoading) {
+  if (ProductsStore.isLoading) {
     return <div>Loading...</div>
   }
 
@@ -37,21 +39,22 @@ const ProductList = observer(() => {
 
   return (
     <div className="grid grid-cols-4 gap-5 gap-y-7.5 mt-5 mb-32.5">
-      {productsStore.products.map((product) => {
+      {ProductsStore.products.map((product) => {
         const category = categoryStore.categories.find(
-          (cat) => cat.id === product.category_id
+          (cat) => cat.id === product.category_id,
         )
         return (
           <div key={product.id}>
             <div className="relative">
-              {productsStore.productImages[product.id] && (
+              {ProductsStore.productImages[product.id] && (
                 <img
-                  src={productsStore.productImages[product.id][0]}
+                  src={ProductsStore.productImages[product.id][0]}
                   alt={product.name}
                   className="w-full h-[138px] object-contain"
                 />
               )}
-              <div className="absolute left-2.5 bottom-3.5 bg-main-blue text-white rounded-full px-2.5 h-6 flex items-center flex-shrink-0 text-sm cursor-pointer">
+              <div
+                className="absolute left-2.5 bottom-3.5 bg-main-blue text-white rounded-full px-2.5 h-6 flex items-center flex-shrink-0 text-sm cursor-pointer">
                 {category?.name}
               </div>
             </div>
@@ -71,7 +74,8 @@ const ProductList = observer(() => {
                     -10%
                   </p>
                 </div>
-                <button className="text-main-blue rounded-full border border-main-blue py-2.5 px-6 mt-2.5 cursor-pointer text-sm/[140%]">
+                <button
+                  className="text-main-blue rounded-full border border-main-blue py-2.5 px-6 mt-2.5 cursor-pointer text-sm/[140%]">
                   Добавить в корзину
                 </button>
               </div>

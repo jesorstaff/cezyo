@@ -1,7 +1,6 @@
 import { makeAutoObservable, runInAction } from "mobx"
 import axios from "axios"
 import { IProduct } from "../interfaces"
-import { fetchProductsApi } from "../api/productsApi"
 
 class ProductsStore {
   products: IProduct[] = []
@@ -21,13 +20,13 @@ class ProductsStore {
       categoryId && categoryId.length > 0 ? { category_id: categoryId } : {}
 
     try {
-      // const response = await axios.get("https://test2.sionic.ru/api/Products", {
-      //   params: {
-      //     range: JSON.stringify(this.currentRange),
-      //     filter: JSON.stringify(filter),
-      //   },
-      // })
-      const response = await fetchProductsApi(this.currentRange, filter)
+      const response = await axios.get("https://test2.sionic.ru/api/Products", {
+        params: {
+          range: JSON.stringify(this.currentRange),
+          filter: JSON.stringify(filter),
+        },
+      })
+
       runInAction(() => {
         this.products = response.data
       })
@@ -103,7 +102,7 @@ class ProductsStore {
         }
       })
 
-      await this.fetchProductImages(newProducts.map((product) => product.id))
+      await this.fetchProductImages(newProducts.map((product:IProduct) => product.id))
     } catch (error) {
       console.error(
         "Ошибка при запросе подгружаемых товаров во время скролла:",
